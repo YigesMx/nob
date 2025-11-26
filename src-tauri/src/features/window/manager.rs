@@ -11,6 +11,7 @@ use url::Url;
 const EXTERNAL_OPEN_SCRIPT: &str = r#"
 (() => {
   console.log("[NoB] injected external-open script");
+
   const invokeOpen = (url) => {
     const tauri = window.__TAURI__;
     const invoker = tauri?.core?.invoke ?? tauri?.invoke;
@@ -114,14 +115,41 @@ pub fn open_or_navigate_content_window(app: &AppHandle<Wry>, url: &str) -> Resul
         Ok(())
     } else {
         // 新建内容窗口，默认尺寸和位置（后续可根据悬浮条定位）
-        tauri::WebviewWindowBuilder::new(app, "content", WebviewUrl::External(parsed))
+        let window = tauri::WebviewWindowBuilder::new(app, "content", WebviewUrl::External(parsed))
             .title("NoB 内容")
             .inner_size(1100.0, 780.0)
             .position(120.0, 120.0)
+            .decorations(false)
             .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15")
             .initialization_script(EXTERNAL_OPEN_SCRIPT)
             .build()
             .map_err(|e| e.to_string())?;
+        
+        // set background color only when building for macOS
+        #[cfg(target_os = "macos")]
+        {
+          // window.ns_window()
+          use objc2_app_kit::{NSColor, NSView, NSWindow};
+
+          unsafe {
+            let raw = window.ns_window().expect("macOS window pointer");
+            let ns_window: &NSWindow = &*raw.cast();
+
+            let content = ns_window.contentView().expect("contentView");
+            let frame = content.superview().expect("superview"); // 包裹内容的父视图
+            frame.setWantsLayer(true);
+            if let Some(layer) = frame.layer() {
+              layer.setCornerRadius(12.0);
+              layer.setMasksToBounds(true);
+              layer.setBorderWidth(0.0);
+            }
+
+            ns_window.setOpaque(false);
+            let clear = NSColor::clearColor();
+            ns_window.setBackgroundColor(Some(&clear));
+          }
+        }
+
         Ok(())
     }
 }

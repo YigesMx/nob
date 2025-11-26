@@ -1,3 +1,4 @@
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Pin, PinOff, Plus, RefreshCw, X } from "lucide-react";
 
@@ -46,6 +47,32 @@ export function TabStrip({
   useEffect(() => {
     setCreating(false);
   }, [tabs]);
+
+  const closeContentWindow = async () => {
+    const win = await WebviewWindow.getByLabel("content");
+    if (win) {
+      await win.close();
+    }
+  };
+
+  const handleTabActivate = async (tab: Tab) => {
+    if (tab.is_active) {
+      await closeContentWindow();
+      return;
+    }
+    await onActivate(tab.id);
+  };
+
+  const handleDrop = (dragId: string, targetId: string) => {
+    if (dragId === targetId) return;
+    const current = [...orderedIds];
+    const from = current.indexOf(dragId);
+    const to = current.indexOf(targetId);
+    if (from === -1 || to === -1) return;
+    current.splice(from, 1);
+    current.splice(to, 0, dragId);
+    void onReorder(current);
+  };
 
   const handleCreate = async () => {
     if (!url.trim()) return;
@@ -103,7 +130,7 @@ export function TabStrip({
                 key={tab.id}
                 tab={tab}
                 isDragging={draggingId === tab.id}
-                onActivate={() => onActivate(tab.id)}
+                onActivate={() => void handleTabActivate(tab)}
                 onTogglePin={() => onTogglePin(tab.id, !tab.is_pinned)}
                 onClose={() => onClose(tab.id)}
                 onDragStart={() => setDraggingId(tab.id)}
@@ -190,13 +217,3 @@ function normalizeUrl(input: string): string {
   }
   return `https://${input}`;
 }
-  const handleDrop = (dragId: string, targetId: string) => {
-    if (dragId === targetId) return;
-    const current = [...orderedIds];
-    const from = current.indexOf(dragId);
-    const to = current.indexOf(targetId);
-    if (from === -1 || to === -1) return;
-    current.splice(from, 1);
-    current.splice(to, 0, dragId);
-    void onReorder(current);
-  };

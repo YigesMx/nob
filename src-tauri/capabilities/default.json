@@ -19,6 +19,8 @@
     "core:menu:allow-append",
     "core:menu:allow-prepend",
     "core:menu:allow-insert",
+    "core:window:default",
+    "core:window:allow-start-dragging",
     "opener:default",
     "notification:default",
     {

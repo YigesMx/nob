@@ -35,7 +35,7 @@ export function TabWorkspace() {
   const activeTab = tabs.find((t) => t.is_active);
 
   return (
-    <div className="flex h-dvh flex-col gap-4 bg-gradient-to-br from-background via-background to-muted/40 px-4 py-4">
+    <div className="flex h-dvh flex-col gap-4 px-4 py-4" data-tauri-drag-region>
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">NoB · 轻量浏览器</h1>
