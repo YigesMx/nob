@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { invoke } from "@tauri-apps/api/core";
 
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -32,20 +33,16 @@ export function TabWorkspace() {
     }
   }, [isLoading, tabs.length]);
 
-  const activeTab = tabs.find((t) => t.is_active);
+  const handleDragStart = () => {
+    invoke("window_drag_start").catch(console.error);
+  };
 
   return (
-    <div className="flex h-dvh flex-col gap-4 px-4 py-4" data-tauri-drag-region>
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">NoB · 轻量浏览器</h1>
-          <p className="text-sm text-muted-foreground">
-            悬浮标签栏 · 单窗口内容区（即将接入内容窗）
-          </p>
-        </div>
-        <div className="text-xs text-muted-foreground">状态：{tabs.length} 个标签</div>
-      </header>
-
+    <div 
+      className="flex h-dvh flex-col gap-4 px-4 py-4" 
+      data-tauri-drag-region
+      onMouseDown={handleDragStart}
+    >
       <TabStrip
         tabs={tabs}
         isLoading={isLoading}
@@ -60,37 +57,6 @@ export function TabWorkspace() {
         onPrevious={() => activatePrevious()}
         onCloseActive={() => closeActive()}
       />
-
-      <Card className="flex flex-1 flex-col gap-2 overflow-hidden border-muted bg-card/70 p-4 shadow-sm backdrop-blur">
-        {activeTab ? (
-          <>
-            <div className="flex items-center justify-between gap-2">
-              <div className="truncate">
-                <div className="text-sm font-semibold leading-tight">{activeTab.title}</div>
-                <div className="text-xs text-muted-foreground truncate">{activeTab.url}</div>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                最近活跃：{new Date(activeTab.last_opened_at).toLocaleTimeString()}
-              </div>
-            </div>
-            <Separator />
-            <div className="flex flex-1 items-center justify-center">
-              <div className="text-center text-sm text-muted-foreground leading-relaxed max-w-md">
-                内容窗口将在原生 Tauri 窗口中打开（待接入）。当前仅管理标签数据，可通过托盘/WS 控制。
-              </div>
-            </div>
-          </>
-        ) : isLoading ? (
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-10 w-1/2" />
-            <Skeleton className="h-24 w-full" />
-          </div>
-        ) : (
-          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-            还没有标签，创建一个吧。
-          </div>
-        )}
-      </Card>
     </div>
   );
 }

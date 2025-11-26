@@ -1,4 +1,3 @@
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Pin, PinOff, Plus, RefreshCw, X } from "lucide-react";
 
@@ -48,18 +47,7 @@ export function TabStrip({
     setCreating(false);
   }, [tabs]);
 
-  const closeContentWindow = async () => {
-    const win = await WebviewWindow.getByLabel("content");
-    if (win) {
-      await win.close();
-    }
-  };
-
   const handleTabActivate = async (tab: Tab) => {
-    if (tab.is_active) {
-      await closeContentWindow();
-      return;
-    }
     await onActivate(tab.id);
   };
 
@@ -148,7 +136,7 @@ export function TabStrip({
 
 function TabPill({
   tab,
-  isDragging,
+  // isDragging,
   onActivate,
   onTogglePin,
   onClose,

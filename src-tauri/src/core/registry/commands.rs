@@ -22,5 +22,7 @@ pub fn get_handler() -> impl Fn(Invoke<tauri::Wry>) -> bool + Send + Sync + 'sta
         crate::infrastructure::webserver::api::commands::start_web_server,
         crate::infrastructure::webserver::api::commands::stop_web_server,
         crate::infrastructure::webserver::api::commands::web_server_status,
+        // Window Feature Commands
+        crate::features::window::api::commands::window_drag_start,
     ]
 }

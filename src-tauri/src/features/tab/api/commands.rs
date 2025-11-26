@@ -28,7 +28,7 @@ pub async fn tabs_create(
         .map_err(|e| e.to_string())?;
 
     // 打开或导航内容窗口
-    let _ = window_manager::open_or_navigate_content_window(&app_state.app_handle(), &tab.url);
+    let _ = window_manager::present_content_window(&app_state.app_handle(), Some(&tab.url));
     let _ = emit_tab_event(&app_state, "created", json!({ "tab": tab.clone() }));
 
     Ok(tab)
@@ -53,14 +53,38 @@ pub async fn tabs_update(
 
 #[tauri::command]
 pub async fn tabs_activate(app_state: State<'_, AppState>, id: String) -> Result<Option<Tab>, String> {
+    // 获取当前缓存的 URL，用于判断是否需要导航
+    let current_cached_url = window_manager::get_current_url();
+
     let tab = TabService::activate(app_state.db(), &id)
         .await
         .map(|res| res.map(Tab::from))
         .map_err(|e| e.to_string())?;
 
     if let Some(ref tab) = tab {
-        let _ = window_manager::open_or_navigate_content_window(&app_state.app_handle(), &tab.url);
+        // 如果 URL 相同，传入 None 以避免刷新；否则传入 Some(url) 进行导航
+        let should_navigate = match current_cached_url {
+            Some(ref cached) => cached != &tab.url,
+            None => true,
+        };
+        let url_arg = if should_navigate { Some(tab.url.as_str()) } else { None };
+
+        let _ = window_manager::present_content_window(&app_state.app_handle(), url_arg);
         let _ = emit_tab_event(&app_state, "activated", json!({ "tab": tab }));
+    } else {
+        // 如果 activate 返回 None，可能是因为已经是 active 状态
+        // 这种情况下，我们仍然需要确保窗口显示（解决再次点击无法打开的问题）
+        if let Ok(Some(current_tab)) = TabService::get(app_state.db(), &id).await {
+             let tab = Tab::from(current_tab);
+             
+             let should_navigate = match current_cached_url {
+                Some(ref cached) => cached != &tab.url,
+                None => true,
+            };
+            let url_arg = if should_navigate { Some(tab.url.as_str()) } else { None };
+
+             let _ = window_manager::present_content_window(&app_state.app_handle(), url_arg);
+        }
     }
 
     Ok(tab)
@@ -76,7 +100,7 @@ pub async fn tabs_close(app_state: State<'_, AppState>, id: String) -> Result<Op
     let _ = emit_tab_event(&app_state, "closed", json!({ "id": id }));
 
     if let Some(ref tab) = activated {
-        let _ = window_manager::open_or_navigate_content_window(&app_state.app_handle(), &tab.url);
+        let _ = window_manager::present_content_window(&app_state.app_handle(), Some(&tab.url));
         let _ = emit_tab_event(&app_state, "activated", json!({ "tab": tab }));
     }
 

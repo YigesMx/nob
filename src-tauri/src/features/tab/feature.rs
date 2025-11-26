@@ -5,6 +5,8 @@ use sea_orm_migration::MigrationTrait;
 use crate::core::{AppState, Feature};
 use crate::infrastructure::database::DatabaseRegistry;
 use crate::infrastructure::webserver::HandlerRegistry;
+use crate::features::tab::core::service::TabService;
+use crate::features::window::manager as window_manager;
 
 use super::data::migration::TabMigration;
 
@@ -26,6 +28,14 @@ impl Feature for TabFeature {
 
     fn name(&self) -> &'static str {
         "tab"
+    }
+
+    async fn initialize(&self, app_state: &AppState) -> Result<()> {
+        // 初始化时，获取当前激活的 Tab 并设置到 Window Manager
+        if let Ok(Some(tab)) = TabService::get_active(app_state.db()).await {
+            window_manager::set_current_url(tab.url);
+        }
+        Ok(())
     }
 
     fn register_database(&self, registry: &mut DatabaseRegistry) {
@@ -51,10 +61,5 @@ impl Feature for TabFeature {
 
     fn register_ws_handlers(&self, registry: &mut HandlerRegistry) {
         super::api::handlers::register_handlers(registry);
-    }
-
-    async fn initialize(&self, _app_state: &AppState) -> Result<()> {
-        println!("[TabFeature] Initialized");
-        Ok(())
     }
 }

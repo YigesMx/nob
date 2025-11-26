@@ -13,12 +13,13 @@
     "windows": [
       {
         "title": "NoB",
-        "width": 512,
-        "height": 512,
+        "width": 600,
+        "height": 200,
         "decorations": false,
         "transparent": true,
         "resizable": true,
-        "alwaysOnTop": true
+        "alwaysOnTop": true,
+        "acceptFirstMouse": true
       }
     ],
     "security": {

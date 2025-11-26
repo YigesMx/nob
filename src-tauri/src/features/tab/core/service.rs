@@ -163,6 +163,19 @@ impl TabService {
         }
     }
 
+    pub async fn get(db: &DatabaseConnection, id: &str) -> Result<Option<Model>> {
+        let tab = TabEntity::find_by_id(id.to_string()).one(db).await?;
+        Ok(tab)
+    }
+
+    pub async fn get_active(db: &DatabaseConnection) -> Result<Option<Model>> {
+        let tab = TabEntity::find()
+            .filter(entity::Column::IsActive.eq(true))
+            .one(db)
+            .await?;
+        Ok(tab)
+    }
+
     async fn activate_adjacent(db: &DatabaseConnection, forward: bool) -> Result<Option<Model>> {
         let txn = db.begin().await?;
         let tabs = TabEntity::find()
