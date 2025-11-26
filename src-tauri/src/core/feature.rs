@@ -5,7 +5,6 @@ use async_trait::async_trait;
 
 use crate::core::AppState;
 use crate::infrastructure::database::DatabaseRegistry;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::infrastructure::webserver::HandlerRegistry;
 
 /// Feature trait - 所有业务功能模块必须实现此 trait
@@ -36,7 +35,6 @@ pub trait Feature: Send + Sync {
     }
 
     /// 注册 WebSocket Call-Reply Handlers（仅桌面平台）
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn register_ws_handlers(&self, _registry: &mut HandlerRegistry) {
         // 默认实现：不注册任何 WS Handlers
     }

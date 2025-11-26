@@ -18,12 +18,9 @@ pub fn get_handler() -> impl Fn(Invoke<tauri::Wry>) -> bool + Send + Sync + 'sta
         crate::features::tab::api::commands::tabs_activate_next,
         crate::features::tab::api::commands::tabs_activate_previous,
         crate::features::tab::api::commands::tabs_close_active,
-        // WebServer Commands (Desktop only)
-        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        // WebServer Commands
         crate::infrastructure::webserver::api::commands::start_web_server,
-        #[cfg(not(any(target_os = "android", target_os = "ios")))]
         crate::infrastructure::webserver::api::commands::stop_web_server,
-        #[cfg(not(any(target_os = "android", target_os = "ios")))]
         crate::infrastructure::webserver::api::commands::web_server_status,
     ]
 }

@@ -69,13 +69,6 @@ pub fn show_main_window(app: &AppHandle<Wry>) -> Result<(), String> {
         window.show().map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
 
-        // macOS: 窗口显示时显示 Dock 图标
-        #[cfg(target_os = "macos")]
-        {
-            app.set_activation_policy(tauri::ActivationPolicy::Regular)
-                .map_err(|e| e.to_string())?;
-        }
-
         Ok(())
     } else {
         Err("Main window not found".to_string())
@@ -87,13 +80,6 @@ pub fn show_main_window(app: &AppHandle<Wry>) -> Result<(), String> {
 pub fn hide_main_window(app: &AppHandle<Wry>) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         window.hide().map_err(|e| e.to_string())?;
-
-        // macOS: 窗口隐藏时隐藏 Dock 图标
-        #[cfg(target_os = "macos")]
-        {
-            app.set_activation_policy(tauri::ActivationPolicy::Accessory)
-                .map_err(|e| e.to_string())?;
-        }
 
         Ok(())
     } else {
@@ -173,4 +159,12 @@ pub fn handle_window_close_request<R: Runtime>(window: &Window<R>, api: &CloseRe
             .app_handle()
             .set_activation_policy(tauri::ActivationPolicy::Accessory);
     }
+}
+
+/// 确保应用启动时在 macOS 上不显示 Dock 图标
+pub fn configure_startup_behavior(app: &AppHandle<Wry>) {
+  #[cfg(target_os = "macos")]
+  {
+    let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+  }
 }

@@ -1,12 +1,9 @@
 use serde_json::json;
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::features::window::manager;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::infrastructure::webserver::HandlerRegistry;
 
 /// 注册 Window Feature 的所有 WebSocket handlers
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn register_handlers(registry: &mut HandlerRegistry) {
     // 显示主窗口
     registry.register_call("window.show", |_method, _params, ctx| {

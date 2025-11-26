@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "NoB",
-        "width": 720,
-        "height": 1280
+        "width": 320,
+        "height": 200
       }
     ],
     "security": {

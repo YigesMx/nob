@@ -21,7 +21,6 @@ fn init_features() -> Vec<Arc<dyn Feature>> {
     ]
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -49,8 +48,7 @@ pub fn run() {
             // 创建 AppState
             let mut state = AppState::new(handle.clone(), db, features.clone());
 
-            // 注册 WebSocket Handlers（仅桌面平台）
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
+            // 注册 WebSocket Handlers
             {
                 let mut registry =
                     tauri::async_runtime::block_on(state.webserver_manager().registry_mut());
@@ -59,12 +57,9 @@ pub fn run() {
                 }
             }
 
-            // 构建并设置 Tray Registry（仅桌面平台）
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
-            {
-                let tray_registry = core::registry::tray::build_tray_registry();
-                state.set_tray_registry(tray_registry);
-            }
+            // 构建并设置 Tray Registry
+            let tray_registry = core::registry::tray::build_tray_registry();
+            state.set_tray_registry(tray_registry);
 
             // 初始化所有 Features
             for feature in &features {
@@ -84,19 +79,14 @@ pub fn run() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
-            match event {
-                tauri::WindowEvent::CloseRequested { api, .. } => {
-                    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                    {
-                        // 仅对主窗口进行拦截，其它窗口正常关闭
-                        if window.label() == "main" {
-                            features::window::manager::handle_window_close_request(window, api);
-                        }
-                    }
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                // 仅对主窗口进行拦截，其它窗口正常关闭
+                if window.label() == "main" {
+                    features::window::manager::handle_window_close_request(window, api);
                 }
-                _ => {}
             }
+            _ => {}
         })
         .invoke_handler(core::registry::commands::get_handler())
         .run(tauri::generate_context!())

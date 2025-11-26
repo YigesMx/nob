@@ -1,18 +1,15 @@
 use anyhow::Context;
 use serde_json::json;
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::infrastructure::webserver::{HandlerRegistry, WsMessage};
 
 use crate::features::tab::core::models::{
     CreateTabPayload, ReorderTabsPayload, Tab, UpdateTabPayload,
 };
 use crate::features::tab::core::service::TabService;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::infrastructure::webserver::core::ws::ApiContext;
 
 /// 注册 Tab Feature 的 WebSocket handlers
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn register_handlers(registry: &mut HandlerRegistry) {
     // 声明可订阅事件
     registry.register_event("tabs.created", "标签页创建");
@@ -149,14 +146,12 @@ pub fn register_handlers(registry: &mut HandlerRegistry) {
     });
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 async fn broadcast_tab(ctx: &ApiContext, channel: &str, tab: &Tab) {
     if let Ok(payload) = serde_json::to_value(tab) {
         broadcast_simple(ctx, channel, payload).await;
     }
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 async fn broadcast_simple(ctx: &ApiContext, channel: &str, payload: serde_json::Value) {
     let message = WsMessage::event(channel.to_string(), payload);
     ctx.connection_manager()

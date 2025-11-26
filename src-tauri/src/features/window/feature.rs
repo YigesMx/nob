@@ -24,7 +24,6 @@ impl Feature for WindowFeature {
         "window"
     }
 
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn register_ws_handlers(
         &self,
         registry: &mut crate::infrastructure::webserver::HandlerRegistry,
@@ -34,6 +33,7 @@ impl Feature for WindowFeature {
 
     async fn initialize(&self, _app_state: &AppState) -> Result<()> {
         println!("[WindowFeature] Initialized");
+        super::manager::configure_startup_behavior(&_app_state.app_handle());
         Ok(())
     }
 

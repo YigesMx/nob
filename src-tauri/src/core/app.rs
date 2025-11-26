@@ -6,9 +6,7 @@ use tauri::{AppHandle, Wry};
 
 use crate::core::Feature;
 use crate::infrastructure::notification::NotificationManager;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::infrastructure::tray::TrayManager;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::infrastructure::webserver::WebServerManager;
 
 /// 应用全局状态
@@ -22,12 +20,10 @@ pub struct AppState {
     // 通知管理器
     notification_manager: NotificationManager,
 
-    // WebServer 管理器（桌面平台）
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    // WebServer 管理器
     webserver_manager: WebServerManager,
 
-    // 系统托盘管理器（桌面平台）
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    // 系统托盘管理器
     tray_manager: TrayManager,
 }
 
@@ -50,9 +46,7 @@ impl AppState {
             db,
             features: feature_map,
             notification_manager,
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
             webserver_manager: WebServerManager::new(),
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
             tray_manager: TrayManager::new(),
         }
     }
@@ -82,20 +76,17 @@ impl AppState {
         &self.notification_manager
     }
 
-    /// 获取 WebServer 管理器（仅桌面平台）
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    /// 获取 WebServer 管理器
     pub fn webserver_manager(&self) -> &WebServerManager {
         &self.webserver_manager
     }
 
-    /// 获取 Tray 管理器（仅桌面平台）
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    /// 获取 Tray 管理器
     pub fn tray_manager(&self) -> &TrayManager {
         &self.tray_manager
     }
 
-    /// 设置托盘注册表（仅桌面平台）
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    /// 设置托盘注册表
     pub fn set_tray_registry(&mut self, registry: crate::infrastructure::tray::TrayRegistry) {
         self.tray_manager.set_registry(registry);
     }
@@ -105,22 +96,16 @@ impl AppState {
     /// 此时 AppState 已经被 Tauri 托管，可以通过 app.try_state() 访问。
     /// 执行需要访问已托管状态的初始化逻辑。
     pub async fn post_initialize(&self, app: &AppHandle<Wry>) -> anyhow::Result<()> {
-        // 桌面平台特定的初始化
-        #[cfg(not(any(target_os = "android", target_os = "ios")))]
-        {
-            // 1. 创建系统托盘
-            self.tray_manager
-                .create_tray(app)
-                .map_err(|e| anyhow::anyhow!("Failed to create tray: {}", e))?;
+        // 创建系统托盘
+        self.tray_manager
+            .create_tray(app)
+            .map_err(|e| anyhow::anyhow!("Failed to create tray: {}", e))?;
 
-            // 2. 自动启动 WebServer（如果配置启用）
-            self.webserver_manager
-                .try_auto_start(self.db.clone(), app.clone())
-                .await
-                .map_err(|e| anyhow::anyhow!("Failed to auto-start web server: {}", e))?;
-        }
-
-        // 未来可以在这里添加桌面和移动平台通用的初始化逻辑
+        // 自动启动 WebServer（如果配置启用）
+        self.webserver_manager
+            .try_auto_start(self.db.clone(), app.clone())
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to auto-start web server: {}", e))?;
 
         Ok(())
     }

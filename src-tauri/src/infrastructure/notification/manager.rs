@@ -37,7 +37,6 @@ impl NotificationManager {
 
         // 尝试获取 AppState 中的 WebServer ConnectionManager
         if let Some(state) = app_handle.try_state::<crate::core::AppState>() {
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
             if let Some(webserver) = state.webserver_manager().get_connection_manager() {
                 // 通过 WebServer 的 ConnectionManager 广播
                 let message =

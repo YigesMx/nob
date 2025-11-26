@@ -9,7 +9,6 @@ pub fn quit_app_item() -> TrayMenuItem {
         // 先停止 web server
         let app_handle = app.clone();
         tauri::async_runtime::spawn(async move {
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
             if let Some(state) = app_handle.try_state::<AppState>() {
                 let _ = state.webserver_manager().stop().await;
             }

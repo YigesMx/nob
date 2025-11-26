@@ -4,7 +4,6 @@ use sea_orm_migration::MigrationTrait;
 
 use crate::core::{AppState, Feature};
 use crate::infrastructure::database::DatabaseRegistry;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::infrastructure::webserver::HandlerRegistry;
 
 use super::data::migration::TabMigration;
@@ -50,7 +49,6 @@ impl Feature for TabFeature {
         ]
     }
 
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn register_ws_handlers(&self, registry: &mut HandlerRegistry) {
         super::api::handlers::register_handlers(registry);
     }

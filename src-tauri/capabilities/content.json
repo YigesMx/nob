@@ -1,8 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "content",
-  "description": "Base capability for content window",
+  "description": "Allow content window to access limited Tauri APIs for remote pages",
   "windows": ["content"],
+  "remote": {
+    "urls": ["https://*", "http://*"]
+  },
+  "platforms": ["macOS", "windows", "linux"],
   "permissions": [
     "core:default",
     "opener:default",
