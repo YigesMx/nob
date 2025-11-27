@@ -22,7 +22,7 @@ export function WindowControls() {
       </Label>
       <ButtonGroup>
         <Button
-          variant={isPinned ? "default" : "outline"}
+          variant={isPinned ? "default" : "ghost"}
           size="icon"
           onClick={togglePin}
           title={isPinned ? "Unpin content window" : "Pin content window"}

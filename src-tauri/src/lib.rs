@@ -78,9 +78,14 @@ pub fn run() {
                 }
             }
             // 监听移动和调整大小事件，同步内容窗口位置
-            tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
+            tauri::WindowEvent::Moved(_) => {
                 if window.label() == "main" {
                     features::window::manager::on_main_window_moved(window.app_handle());
+                }
+            }
+            tauri::WindowEvent::Resized(_) => {
+                if window.label() == "main" {
+                    features::window::manager::on_main_window_resized(window.app_handle());
                 }
             }
             // 监听焦点事件，处理自动显示/隐藏

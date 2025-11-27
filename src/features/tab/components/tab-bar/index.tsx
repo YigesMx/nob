@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { useTabs } from "@/features/tab/hooks/useTabs";
 import { ActiveTabControls } from "./active-tab-controls";
@@ -45,8 +46,53 @@ export function TabBar() {
     reloadTab(id);
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateSize = () => {
+      if (containerRef.current) {
+        const { offsetWidth, offsetHeight } = containerRef.current;
+        const style = window.getComputedStyle(containerRef.current);
+        const marginLeft = parseFloat(style.marginLeft) || 0;
+        const marginRight = parseFloat(style.marginRight) || 0;
+        const marginTop = parseFloat(style.marginTop) || 0;
+        const marginBottom = parseFloat(style.marginBottom) || 0;
+        
+        const width = offsetWidth + marginLeft + marginRight;
+        const height = offsetHeight + marginTop + marginBottom;
+
+        if (width <= 0 || height <= 0) return;
+
+        // Debounce resize calls
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current);
+        }
+
+        resizeTimeoutRef.current = setTimeout(() => {
+          invoke("resize_main_window", { width, height }).catch(console.error);
+        }, 50);
+      }
+    };
+
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(containerRef.current);
+    
+    // Initial call
+    updateSize();
+
+    return () => {
+      observer.disconnect();
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <ButtonGroup className="m-1.5 flex items-center" data-tauri-drag-region>
+    <ButtonGroup ref={containerRef} className="m-1.5 flex items-center" data-tauri-drag-region>
       <WindowControls />
       
       <TabList tabs={tabs} onActivate={handleActivate} />

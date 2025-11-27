@@ -3,7 +3,7 @@
 
 use tauri::{
     AppHandle, CloseRequestApi, Manager, PhysicalPosition, Position, Runtime,
-    WebviewUrl, Window, Wry,
+    WebviewUrl, Window, WebviewWindow, Wry, Size, LogicalSize,
 };
 use url::Url;
 use std::sync::Mutex;
@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::async_runtime::JoinHandle;
 
 #[cfg(target_os = "macos")]
-use objc2_app_kit::NSWindow;
+use objc2_app_kit::{NSWindow, NSWindowCollectionBehavior};
 
 static MOVE_TASK: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
 static MAIN_FOCUSED: AtomicBool = AtomicBool::new(false);
@@ -255,6 +255,31 @@ pub fn toggle_main_window(app: &AppHandle<Wry>) -> Result<(), String> {
     }
 }
 
+/// 调整主窗口大小
+pub fn resize_main_window(app: &AppHandle<Wry>, width: f64, height: f64) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        // 避免无效尺寸
+        if width <= 0.0 || height <= 0.0 {
+            return Ok(());
+        }
+
+        // 检查当前尺寸，避免重复调整导致死循环或闪烁
+        if let Ok(factor) = window.scale_factor() {
+            if let Ok(current_size) = window.inner_size() {
+                let current_logical = current_size.to_logical::<f64>(factor);
+                if (current_logical.width - width).abs() < 1.0 && (current_logical.height - height).abs() < 1.0 {
+                    return Ok(());
+                }
+            }
+        }
+
+        window.set_size(Size::Logical(LogicalSize { width, height })).map_err(|e| e.to_string())?;
+        Ok(())
+    } else {
+        Err("Main window not found".to_string())
+    }
+}
+
 /// 同步内容窗口位置（紧贴主窗口下方）
 pub fn sync_content_window_position(app: &AppHandle<Wry>) {
     let main_window = match app.get_webview_window("main") {
@@ -291,6 +316,11 @@ pub fn sync_content_window_position(app: &AppHandle<Wry>) {
     }
 
     let _ = content_window.set_position(Position::Physical(new_pos));
+}
+
+/// 处理主窗口调整大小事件
+pub fn on_main_window_resized(app: &AppHandle<Wry>) {
+    sync_content_window_position(app);
 }
 
 /// 处理主窗口移动/调整大小事件（防抖：拖动时隐藏，停止后显示）
@@ -448,6 +478,8 @@ pub fn present_content_window(app: &AppHandle<Wry>, url: Option<&str>, focus: bo
           }
         }
 
+        set_window_on_all_workspaces(&window);
+
         sync_content_window_position(app);
         Ok(())
     }
@@ -492,6 +524,10 @@ pub fn configure_startup_behavior(app: &AppHandle<Wry>) {
   #[cfg(target_os = "macos")]
   {
     let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+  }
+  
+  if let Some(window) = app.get_webview_window("main") {
+      set_window_on_all_workspaces(&window);
   }
 }
 
@@ -550,5 +586,41 @@ pub fn handle_focus_change(app: &AppHandle<Wry>, window_label: &str, focused: bo
         });
         *task_guard = Some(task);
     }
+}
+
+#[cfg(target_os = "macos")]
+fn set_window_on_all_workspaces(window: &WebviewWindow<Wry>) {
+    if let Ok(raw) = window.ns_window() {
+        unsafe {
+            let ns_window: &NSWindow = &*raw.cast();
+            ns_window.setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces);
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn set_window_on_all_workspaces(window: &WebviewWindow<Wry>) {
+    use tauri::platform::windows::WindowExtWindows;
+    use windows::Win32::UI::Shell::{IVirtualDesktopManager, VirtualDesktopManager};
+    use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
+    use windows::Win32::Foundation::HWND;
+
+    if let Ok(hwnd) = window.hwnd() {
+        unsafe {
+            let vdm: Result<IVirtualDesktopManager, _> = CoCreateInstance(
+                &VirtualDesktopManager,
+                None,
+                CLSCTX_ALL
+            );
+            if let Ok(vdm) = vdm {
+                let _ = vdm.PinWindow(HWND(hwnd.0));
+            }
+        }
+    }
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn set_window_on_all_workspaces(_window: &WebviewWindow<Wry>) {
+    // Not implemented for other platforms
 }
 

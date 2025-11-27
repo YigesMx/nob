@@ -26,5 +26,6 @@ pub fn get_handler() -> impl Fn(Invoke<tauri::Wry>) -> bool + Send + Sync + 'sta
         crate::features::tab::api::commands::tabs_respond_url,
         // Window Feature Commands
         crate::features::window::api::commands::set_content_window_pinned,
+        crate::features::window::api::commands::resize_main_window,
     ]
 }
