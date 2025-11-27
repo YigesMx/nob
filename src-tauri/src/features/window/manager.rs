@@ -396,28 +396,23 @@ pub fn present_content_window(app: &AppHandle<Wry>, url: Option<&str>, focus: bo
             } else {
                 #[cfg(target_os = "macos")]
                 {
-                    // macOS: 使用 orderFront 显示窗口但不激活（不抢夺焦点）
-                    use objc2_app_kit::NSWindow;
-                    if let Ok(raw) = window.ns_window() {
-                        unsafe {
-                            let ns_window: &NSWindow = &*raw.cast();
-                            ns_window.orderFront(None);
-                        }
-                    } else {
-                        window.show().map_err(|e| e.to_string())?;
-                    }
+                    // 记录当前主窗口是否聚焦
+                    let was_main_focused = MAIN_FOCUSED.load(Ordering::SeqCst);
+
+                    window.show().map_err(|e| e.to_string())?;
                     
-                    // 额外保障：如果主窗口当前是激活的，强制重新聚焦主窗口
-                    // 延迟一小段时间以确保 orderFront 完成
-                    let app_handle = app.clone();
-                    tauri::async_runtime::spawn(async move {
-                        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                        if MAIN_FOCUSED.load(Ordering::SeqCst) {
+                    // 如果之前主窗口是激活的，强制重新聚焦主窗口
+                    if was_main_focused {
+                        let app_handle = app.clone();
+                        tauri::async_runtime::spawn(async move {
+                            // 延迟一小段时间以确保窗口显示处理完成
+                            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                            print!("[NoB] restoring focus to main window\n");
                             if let Some(main_win) = app_handle.get_webview_window("main") {
                                 let _ = main_win.set_focus();
                             }
-                        }
-                    });
+                        });
+                    }
                 }
                 #[cfg(not(target_os = "macos"))]
                 {
@@ -464,6 +459,11 @@ pub fn present_content_window(app: &AppHandle<Wry>, url: Option<&str>, focus: bo
           unsafe {
             if let Ok(raw) = window.ns_window() {
                 let ns_window: &NSWindow = &*raw.cast();
+                
+                ns_window.setOpaque(false);
+                let clear = NSColor::clearColor();
+                ns_window.setBackgroundColor(Some(&clear));
+                
                 if let Some(content) = ns_window.contentView() {
                     if let Some(frame) = content.superview() {
                         frame.setWantsLayer(true);
@@ -474,9 +474,6 @@ pub fn present_content_window(app: &AppHandle<Wry>, url: Option<&str>, focus: bo
                         }
                     }
                 }
-                ns_window.setOpaque(false);
-                let clear = NSColor::clearColor();
-                ns_window.setBackgroundColor(Some(&clear));
             }
           }
         }
@@ -593,12 +590,8 @@ pub fn handle_focus_change(app: &AppHandle<Wry>, window_label: &str, focused: bo
 
 #[cfg(target_os = "macos")]
 fn set_window_on_all_workspaces(window: &WebviewWindow<Wry>) {
-    if let Ok(raw) = window.ns_window() {
-        unsafe {
-            let ns_window: &NSWindow = &*raw.cast();
-            ns_window.setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces);
-        }
-    }
+    // 使用 Tauri 内置 API 替代原生调用，避免多线程/UI线程问题
+    let _ = window.set_visible_on_all_workspaces(true);
 }
 
 #[cfg(target_os = "windows")]
