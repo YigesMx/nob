@@ -49,6 +49,7 @@ export function NewTabButton({ onCreate, isOpen, onOpenChange }: NewTabButtonPro
         {isOpen && (
           <InputGroup>
             <InputGroupInput
+              className="min-w-[150px]"
               placeholder="Enter URL"
               value={url}
               onChange={(e) => setUrl(e.target.value)}

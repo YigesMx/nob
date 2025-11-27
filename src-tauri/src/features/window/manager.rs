@@ -462,19 +462,22 @@ pub fn present_content_window(app: &AppHandle<Wry>, url: Option<&str>, focus: bo
         {
           use objc2_app_kit::NSColor;
           unsafe {
-            let raw = window.ns_window().expect("macOS window pointer");
-            let ns_window: &NSWindow = &*raw.cast();
-            let content = ns_window.contentView().expect("contentView");
-            let frame = content.superview().expect("superview");
-            frame.setWantsLayer(true);
-            if let Some(layer) = frame.layer() {
-              layer.setCornerRadius(12.0);
-              layer.setMasksToBounds(true);
-              layer.setBorderWidth(0.0);
+            if let Ok(raw) = window.ns_window() {
+                let ns_window: &NSWindow = &*raw.cast();
+                if let Some(content) = ns_window.contentView() {
+                    if let Some(frame) = content.superview() {
+                        frame.setWantsLayer(true);
+                        if let Some(layer) = frame.layer() {
+                            layer.setCornerRadius(12.0);
+                            layer.setMasksToBounds(true);
+                            layer.setBorderWidth(0.0);
+                        }
+                    }
+                }
+                ns_window.setOpaque(false);
+                let clear = NSColor::clearColor();
+                ns_window.setBackgroundColor(Some(&clear));
             }
-            ns_window.setOpaque(false);
-            let clear = NSColor::clearColor();
-            ns_window.setBackgroundColor(Some(&clear));
           }
         }
 
