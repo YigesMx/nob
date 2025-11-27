@@ -600,27 +600,5 @@ fn set_window_on_all_workspaces(window: &WebviewWindow<Wry>) {
 
 #[cfg(target_os = "windows")]
 fn set_window_on_all_workspaces(window: &WebviewWindow<Wry>) {
-    use tauri::platform::windows::WindowExtWindows;
-    use windows::Win32::UI::Shell::{IVirtualDesktopManager, VirtualDesktopManager};
-    use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
-    use windows::Win32::Foundation::HWND;
-
-    if let Ok(hwnd) = window.hwnd() {
-        unsafe {
-            let vdm: Result<IVirtualDesktopManager, _> = CoCreateInstance(
-                &VirtualDesktopManager,
-                None,
-                CLSCTX_ALL
-            );
-            if let Ok(vdm) = vdm {
-                let _ = vdm.PinWindow(HWND(hwnd.0));
-            }
-        }
-    }
+    let _ = window.set_skip_taskbar(true);
 }
-
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-fn set_window_on_all_workspaces(_window: &WebviewWindow<Wry>) {
-    // Not implemented for other platforms
-}
-

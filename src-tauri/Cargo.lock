@@ -2648,6 +2648,7 @@ dependencies = [
  "objc2-app-kit",
  "objc2-foundation 0.3.2",
  "objc2-quartz-core 0.3.2",
+ "raw-window-handle",
  "sea-orm",
  "sea-orm-migration",
  "serde",
@@ -2662,6 +2663,7 @@ dependencies = [
  "url",
  "uuid",
  "windows 0.58.0",
+ "windows-core 0.58.0",
 ]
 
 [[package]]
