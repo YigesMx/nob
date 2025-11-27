@@ -20,10 +20,10 @@
 
 ## TODO
 
-- [ ] Bug Fixes: 新建窗口闪退
 - [ ] 交互优化: main 不可调整大小、content 可调整大小并记忆、main位置记忆
 - [ ] tab 拖放排序
 - [ ] content window 主题同步
+- [ ] main window 右键菜单
 - [ ] App Icon
 - [ ] 贴边隐藏，快捷键呼出or边缘/角落触发
 - [ ] 页面缓存、清除缓存与Cookie等
