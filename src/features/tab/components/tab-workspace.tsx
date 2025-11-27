@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { invoke } from "@tauri-apps/api/core";
 
 import { Card } from "@/components/ui/card";
@@ -27,21 +26,14 @@ export function TabWorkspace() {
   useEffect(() => {
     if (!isLoading && tabs.length === 0) {
       // 提示用户创建首个标签
-      toast("没有标签", {
-        description: "输入 URL 后回车即可创建第一个标签",
-      });
+      // toast removed
     }
-  }, [isLoading, tabs.length]);
-
-  const handleDragStart = () => {
-    invoke("window_drag_start").catch(console.error);
-  };
+  }, [isLoading, tabs.length, createTab]);
 
   return (
     <div 
       className="flex h-dvh flex-col gap-4 px-4 py-4" 
       data-tauri-drag-region
-      onMouseDown={handleDragStart}
     >
       <TabStrip
         tabs={tabs}

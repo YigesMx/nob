@@ -1,14 +1,12 @@
 import "./App.css";
 
-import { NotificationCenter } from "@/components/app/notification-center";
-import { TabWorkspace } from "@/features/tab/components/tab-workspace";
+import { TabBar } from "@/features/tab/components/tab-bar";
 
 function App() {
   return (
-    <>
-      <NotificationCenter />
-      <TabWorkspace />
-    </>
+    <div className="h-screen w-screen overflow-hidden bg-transparent">
+      <TabBar />
+    </div>
   );
 }
 

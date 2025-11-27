@@ -7,6 +7,7 @@ pub struct Model {
     pub id: String,
     pub title: String,
     pub url: String,
+    pub initial_url: String,
     pub favicon_url: Option<String>,
     pub is_pinned: bool,
     pub is_active: bool,

@@ -5,12 +5,11 @@ use async_trait::async_trait;
 
 use crate::core::AppState;
 use crate::infrastructure::database::DatabaseRegistry;
-use crate::infrastructure::webserver::HandlerRegistry;
 
 /// Feature trait - 所有业务功能模块必须实现此 trait
 ///
 /// 每个 Feature 负责：
-/// 1. 向基础设施注册自己的组件（数据库实体、WS Handlers、托盘菜单等）
+/// 1. 向基础设施注册自己的组件（数据库实体、托盘菜单等）
 /// 2. 提供自己的 Tauri Commands
 /// 3. 实现初始化逻辑
 #[async_trait]
@@ -32,11 +31,6 @@ pub trait Feature: Send + Sync {
     /// 这些名称用于文档和调试，实际 Commands 需要在 lib.rs 中手动注册
     fn command_names(&self) -> Vec<&'static str> {
         vec![]
-    }
-
-    /// 注册 WebSocket Call-Reply Handlers（仅桌面平台）
-    fn register_ws_handlers(&self, _registry: &mut HandlerRegistry) {
-        // 默认实现：不注册任何 WS Handlers
     }
 
     /// Feature 初始化（在数据库迁移完成后调用）

@@ -17,6 +17,7 @@ pub struct TrayMenuItem {
     pub label: String,
     pub handler: Arc<dyn Fn(&AppHandle) + Send + Sync>,
     pub is_visible: Arc<dyn Fn(&AppHandle) -> bool + Send + Sync>,
+    pub is_enabled: Arc<dyn Fn(&AppHandle) -> bool + Send + Sync>,
 }
 
 impl TrayMenuItem {
@@ -36,7 +37,17 @@ impl TrayMenuItem {
             label: label.into(),
             handler: Arc::new(handler),
             is_visible: Arc::new(is_visible),
+            is_enabled: Arc::new(|_| true),
         }
+    }
+
+    /// 设置启用状态检查函数
+    pub fn with_enabled<E>(mut self, is_enabled: E) -> Self
+    where
+        E: Fn(&AppHandle) -> bool + Send + Sync + 'static,
+    {
+        self.is_enabled = Arc::new(is_enabled);
+        self
     }
 
     /// 创建总是可见的托盘菜单项
@@ -91,8 +102,9 @@ impl TrayRegistry {
                 TrayMenuLayout::Item(item) => {
                     // 检查可见性
                     if (item.is_visible)(app) {
+                        let enabled = (item.is_enabled)(app);
                         let menu_item =
-                            MenuItem::with_id(app, &item.id, &item.label, true, None::<&str>)?;
+                            MenuItem::with_id(app, &item.id, &item.label, enabled, None::<&str>)?;
                         menu_items.push(Box::new(menu_item));
                     }
                 }

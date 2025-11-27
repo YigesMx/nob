@@ -22,16 +22,6 @@
     "core:window:default",
     "core:window:allow-start-dragging",
     "opener:default",
-    "notification:default",
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "binaries/Lynx",
-          "sidecar": true,
-          "args": true
-        }
-      ]
-    }
+    "notification:default"
   ]
 }

@@ -30,19 +30,11 @@ sea-orm = { version = "1.1", features = ["macros", "runtime-tokio-native-tls", "
 sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio-native-tls"] }
 directories = "6"
 uuid = { version = "1.18.1", features = ["v4"] }
-reqwest = { version = "0.12", default-features = false, features = ["json", "gzip", "rustls-tls"] }
-quick-xml = "0.38"
-ical = "0.11"
-icalendar = "0.17"
 url = "2"
-md5 = "0.8"
-iana-time-zone = "0.1"
 tokio = { version = "1.39", features = ["macros", "rt-multi-thread", "signal", "net", "sync"] }
 async-trait = "0.1.89"
 sea-orm-migration = "1.1.17"
 tauri-plugin-shell = "2.3.3"
-axum = { version = "0.8", features = ["json", "ws"] }
-futures = "0.3"
 
 [target."cfg(target_os = \"macos\")".dependencies]
 objc2 = "0.6.3"

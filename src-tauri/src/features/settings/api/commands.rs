@@ -1,6 +1,5 @@
 use tauri::State;
 
-use super::notifications;
 use crate::core::AppState;
 use crate::features::settings::core::service::SettingService;
 
@@ -47,14 +46,12 @@ pub async fn set_theme_preference(
 
     match SettingService::set(state.db(), "ui.theme", &normalized).await {
         Ok(_) => {
-            // 发送成功通知
-            notifications::notify_theme_updated(state.notification());
+            state.set_theme(normalized.clone());
+            let _ = state.tray_manager().update_tray_menu(&state.app_handle());
             Ok(ThemePreference { theme: normalized })
         }
         Err(err) => {
-            // 发送失败通知
             let error_msg = err.to_string();
-            notifications::notify_theme_update_failed(state.notification(), &error_msg);
             Err(error_msg)
         }
     }

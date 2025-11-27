@@ -57,35 +57,10 @@ impl SettingService {
         Ok(model.into())
     }
 
-    /// 删除设置
-    pub async fn delete(db: &DatabaseConnection, key: &str) -> Result<bool> {
-        let result = SettingEntity::delete_many()
-            .filter(entity::Column::Key.eq(key))
-            .exec(db)
-            .await?;
-
-        Ok(result.rows_affected > 0)
-    }
-
     /// 列出所有设置
     #[allow(dead_code)]
     pub async fn list(db: &DatabaseConnection) -> Result<Vec<entity::Model>> {
         let settings = SettingEntity::find().all(db).await?;
         Ok(settings.into_iter().map(|s| s.into()).collect())
-    }
-
-    /// 获取布尔值设置
-    pub async fn get_bool(db: &DatabaseConnection, key: &str, default: bool) -> Result<bool> {
-        let value = Self::get_or_default(db, key, &default.to_string()).await?;
-        Ok(value.parse::<bool>().unwrap_or(default))
-    }
-
-    /// 设置布尔值
-    pub async fn set_bool(
-        db: &DatabaseConnection,
-        key: &str,
-        value: bool,
-    ) -> Result<entity::Model> {
-        Self::set(db, key, &value.to_string()).await
     }
 }

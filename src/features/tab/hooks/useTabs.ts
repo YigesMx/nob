@@ -12,6 +12,7 @@ import {
   tabsList,
   tabsReorder,
   tabsUpdate,
+  tabsReload,
 } from "@/features/tab/api/tabs.api";
 import type {
   CreateTabInput,
@@ -70,6 +71,11 @@ export function useTabs() {
     onSuccess: invalidate,
   });
 
+  const reloadMutation = useMutation({
+    mutationFn: (id: string) => tabsReload(id),
+    // Reload doesn't change tab state, so no need to invalidate
+  });
+
   // 监听后端触发的 tabs-changed 事件以实时刷新
   useEffect(() => {
     const unlistenPromise = listen("tabs-changed", () => invalidate());
@@ -91,6 +97,7 @@ export function useTabs() {
     activateNext: nextMutation.mutateAsync,
     activatePrevious: previousMutation.mutateAsync,
     closeActive: closeActiveMutation.mutateAsync,
+    reloadTab: reloadMutation.mutateAsync,
     isMutating:
       createMutation.isPending ||
       updateMutation.isPending ||

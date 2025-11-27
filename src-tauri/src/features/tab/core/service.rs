@@ -37,7 +37,8 @@ impl TabService {
         let active_model = entity::ActiveModel {
             id: Set(Uuid::new_v4().to_string()),
             title: Set(payload.title.unwrap_or_else(|| payload.url.clone())),
-            url: Set(payload.url),
+            url: Set(payload.url.clone()),
+            initial_url: Set(payload.url),
             favicon_url: Set(payload.favicon_url),
             is_pinned: Set(payload.is_pinned.unwrap_or(false)),
             is_active: Set(should_activate),
@@ -88,6 +89,50 @@ impl TabService {
             let mut active_model: entity::ActiveModel = model.into();
             active_model.is_active = Set(true);
             active_model.last_opened_at = Set(Utc::now());
+            active_model.updated_at = Set(Utc::now());
+
+            let updated = active_model.update(&txn).await?;
+            txn.commit().await?;
+            Ok(Some(updated))
+        } else {
+            txn.rollback().await.ok();
+            Ok(None)
+        }
+    }
+
+    pub async fn update_active_url(db: &DatabaseConnection, url: String) -> Result<Option<Model>> {
+        let txn = db.begin().await?;
+        // Find the currently active tab
+        let active_tab = TabEntity::find()
+            .filter(entity::Column::IsActive.eq(true))
+            .one(&txn)
+            .await?;
+
+        if let Some(model) = active_tab {
+            let mut active_model: entity::ActiveModel = model.into();
+            active_model.url = Set(url);
+            active_model.updated_at = Set(Utc::now());
+
+            let updated = active_model.update(&txn).await?;
+            txn.commit().await?;
+            Ok(Some(updated))
+        } else {
+            txn.rollback().await.ok();
+            Ok(None)
+        }
+    }
+
+    pub async fn update_active_title(db: &DatabaseConnection, title: String) -> Result<Option<Model>> {
+        let txn = db.begin().await?;
+        // Find the currently active tab
+        let active_tab = TabEntity::find()
+            .filter(entity::Column::IsActive.eq(true))
+            .one(&txn)
+            .await?;
+
+        if let Some(model) = active_tab {
+            let mut active_model: entity::ActiveModel = model.into();
+            active_model.title = Set(title);
             active_model.updated_at = Set(Utc::now());
 
             let updated = active_model.update(&txn).await?;

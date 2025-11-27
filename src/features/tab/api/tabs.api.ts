@@ -42,3 +42,15 @@ export async function tabsActivatePrevious(): Promise<Tab | null> {
 export async function tabsCloseActive(): Promise<Tab | null> {
   return invoke<Tab | null>("tabs_close_active");
 }
+
+export async function tabsReload(id: string): Promise<void> {
+  return invoke<void>("tabs_reload", { id });
+}
+
+export async function tabsGetCurrentUrl(): Promise<string> {
+  return invoke<string>("tabs_get_current_url");
+}
+
+export async function tabsRequestUrl(): Promise<void> {
+  return invoke<void>("tabs_request_url");
+}

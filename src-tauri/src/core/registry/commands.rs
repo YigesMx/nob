@@ -18,11 +18,13 @@ pub fn get_handler() -> impl Fn(Invoke<tauri::Wry>) -> bool + Send + Sync + 'sta
         crate::features::tab::api::commands::tabs_activate_next,
         crate::features::tab::api::commands::tabs_activate_previous,
         crate::features::tab::api::commands::tabs_close_active,
-        // WebServer Commands
-        crate::infrastructure::webserver::api::commands::start_web_server,
-        crate::infrastructure::webserver::api::commands::stop_web_server,
-        crate::infrastructure::webserver::api::commands::web_server_status,
+        crate::features::tab::api::commands::tabs_reload,
+        crate::features::tab::api::commands::tabs_report_navigation,
+        crate::features::tab::api::commands::tabs_report_title,
+        crate::features::tab::api::commands::tabs_get_current_url,
+        crate::features::tab::api::commands::tabs_request_url,
+        crate::features::tab::api::commands::tabs_respond_url,
         // Window Feature Commands
-        crate::features::window::api::commands::window_drag_start,
+        crate::features::window::api::commands::set_content_window_pinned,
     ]
 }

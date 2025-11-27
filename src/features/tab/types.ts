@@ -2,6 +2,7 @@ export type Tab = {
   id: string;
   title: string;
   url: string;
+  initial_url: string;
   favicon_url?: string | null;
   is_pinned: boolean;
   is_active: boolean;

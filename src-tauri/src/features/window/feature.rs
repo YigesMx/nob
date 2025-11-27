@@ -24,13 +24,6 @@ impl Feature for WindowFeature {
         "window"
     }
 
-    fn register_ws_handlers(
-        &self,
-        registry: &mut crate::infrastructure::webserver::HandlerRegistry,
-    ) {
-        super::api::handlers::register_handlers(registry);
-    }
-
     async fn initialize(&self, _app_state: &AppState) -> Result<()> {
         println!("[WindowFeature] Initialized");
         super::manager::configure_startup_behavior(&_app_state.app_handle());

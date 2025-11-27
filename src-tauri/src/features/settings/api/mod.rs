@@ -1,3 +1,3 @@
 // API 接口层
 pub mod commands;
-pub mod notifications;
+pub mod tray;

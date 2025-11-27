@@ -48,15 +48,6 @@ pub fn run() {
             // 创建 AppState
             let mut state = AppState::new(handle.clone(), db, features.clone());
 
-            // 注册 WebSocket Handlers
-            {
-                let mut registry =
-                    tauri::async_runtime::block_on(state.webserver_manager().registry_mut());
-                for feature in &features {
-                    feature.register_ws_handlers(&mut registry);
-                }
-            }
-
             // 构建并设置 Tray Registry
             let tray_registry = core::registry::tray::build_tray_registry();
             state.set_tray_registry(tray_registry);

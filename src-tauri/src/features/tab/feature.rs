@@ -4,7 +4,6 @@ use sea_orm_migration::MigrationTrait;
 
 use crate::core::{AppState, Feature};
 use crate::infrastructure::database::DatabaseRegistry;
-use crate::infrastructure::webserver::HandlerRegistry;
 use crate::features::tab::core::service::TabService;
 use crate::features::window::manager as window_manager;
 
@@ -56,10 +55,8 @@ impl Feature for TabFeature {
             "tabs_activate_next",
             "tabs_activate_previous",
             "tabs_close_active",
+            "tabs_reload",
+            "tabs_report_navigation",
         ]
-    }
-
-    fn register_ws_handlers(&self, registry: &mut HandlerRegistry) {
-        super::api::handlers::register_handlers(registry);
     }
 }

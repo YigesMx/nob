@@ -1,13 +1,11 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use sea_orm::DatabaseConnection;
 use tauri::{AppHandle, Wry};
 
 use crate::core::Feature;
-use crate::infrastructure::notification::NotificationManager;
 use crate::infrastructure::tray::TrayManager;
-use crate::infrastructure::webserver::WebServerManager;
 
 /// 应用全局状态
 ///
@@ -17,14 +15,11 @@ pub struct AppState {
     db: DatabaseConnection,
     features: HashMap<&'static str, Arc<dyn Feature>>,
 
-    // 通知管理器
-    notification_manager: NotificationManager,
-
-    // WebServer 管理器
-    webserver_manager: WebServerManager,
-
     // 系统托盘管理器
     tray_manager: TrayManager,
+
+    // 当前主题缓存 (用于同步访问，如托盘菜单)
+    current_theme: Mutex<String>,
 }
 
 impl AppState {
@@ -38,16 +33,12 @@ impl AppState {
             feature_map.insert(feature.name(), feature);
         }
 
-        // 创建通知管理器
-        let notification_manager = NotificationManager::new(app_handle.clone());
-
         Self {
             app_handle,
             db,
             features: feature_map,
-            notification_manager,
-            webserver_manager: WebServerManager::new(),
             tray_manager: TrayManager::new(),
+            current_theme: Mutex::new("system".to_string()),
         }
     }
 
@@ -61,6 +52,21 @@ impl AppState {
         self.app_handle.clone()
     }
 
+    /// 获取 TrayManager
+    pub fn tray_manager(&self) -> &TrayManager {
+        &self.tray_manager
+    }
+
+    /// 获取当前主题
+    pub fn get_theme(&self) -> String {
+        self.current_theme.lock().unwrap().clone()
+    }
+
+    /// 设置当前主题
+    pub fn set_theme(&self, theme: String) {
+        *self.current_theme.lock().unwrap() = theme;
+    }
+
     /// 根据名称获取 Feature
     pub fn get_feature(&self, name: &str) -> Option<&Arc<dyn Feature>> {
         self.features.get(name)
@@ -69,21 +75,6 @@ impl AppState {
     /// 获取所有 Features
     pub fn features(&self) -> &HashMap<&'static str, Arc<dyn Feature>> {
         &self.features
-    }
-
-    /// 获取通知管理器
-    pub fn notification(&self) -> &NotificationManager {
-        &self.notification_manager
-    }
-
-    /// 获取 WebServer 管理器
-    pub fn webserver_manager(&self) -> &WebServerManager {
-        &self.webserver_manager
-    }
-
-    /// 获取 Tray 管理器
-    pub fn tray_manager(&self) -> &TrayManager {
-        &self.tray_manager
     }
 
     /// 设置托盘注册表
@@ -96,16 +87,15 @@ impl AppState {
     /// 此时 AppState 已经被 Tauri 托管，可以通过 app.try_state() 访问。
     /// 执行需要访问已托管状态的初始化逻辑。
     pub async fn post_initialize(&self, app: &AppHandle<Wry>) -> anyhow::Result<()> {
+        // 初始化主题缓存
+        use crate::features::settings::core::service::SettingService;
+        let theme = SettingService::get_or_default(self.db(), "ui.theme", "system").await?;
+        self.set_theme(theme);
+
         // 创建系统托盘
         self.tray_manager
             .create_tray(app)
             .map_err(|e| anyhow::anyhow!("Failed to create tray: {}", e))?;
-
-        // 自动启动 WebServer（如果配置启用）
-        self.webserver_manager
-            .try_auto_start(self.db.clone(), app.clone())
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to auto-start web server: {}", e))?;
 
         Ok(())
     }

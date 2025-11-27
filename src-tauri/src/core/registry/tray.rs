@@ -8,19 +8,15 @@ pub fn build_tray_registry() -> TrayRegistry {
 
     // 从各个模块导入托盘菜单项
     use crate::features::window::api::tray as window_tray;
-    use crate::features::tab::api::tray as tab_tray;
+    use crate::features::settings::api::tray as settings_tray;
     use crate::infrastructure::tray::quit_app_item;
-    use crate::infrastructure::webserver::api::tray as webserver_tray;
 
     // 手动布局菜单结构
     registry.add_item(window_tray::toggle_window_item());
     registry.add_separator();
-    registry.add_item(tab_tray::activate_previous_item());
-    registry.add_item(tab_tray::activate_next_item());
-    registry.add_item(tab_tray::close_active_item());
-    registry.add_separator();
-    registry.add_item(webserver_tray::start_webserver_item());
-    registry.add_item(webserver_tray::stop_webserver_item());
+    registry.add_item(settings_tray::theme_light_item());
+    registry.add_item(settings_tray::theme_dark_item());
+    registry.add_item(settings_tray::theme_system_item());
     registry.add_separator();
     registry.add_item(quit_app_item());
 

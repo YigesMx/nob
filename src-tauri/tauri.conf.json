@@ -14,7 +14,7 @@
       {
         "title": "NoB",
         "width": 600,
-        "height": 200,
+        "height": 48,
         "decorations": false,
         "transparent": true,
         "resizable": true,
